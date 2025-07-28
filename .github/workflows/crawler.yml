@@ -1,13 +1,15 @@
 name: Daily Crawler
 
 on:
-  workflow_dispatch:       # 수동 실행 활성화
-  schedule:                # 매일 UTC 23시 = 한국 시간 오전 8시
-    - cron: '0 23 * * *'
+  workflow_dispatch:
+  schedule:
+    - cron: '0 23 * * *'  # KST 오전 8시
 
 jobs:
   crawl:
     runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Seoul   # ✅ 시간대를 KST로 설정
 
     steps:
     - name: Checkout repository
