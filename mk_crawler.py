@@ -19,6 +19,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import WebDriverException, TimeoutException
 import time
+from webdriver_manager.chrome import ChromeDriverManager
 
 load_dotenv()
 
@@ -49,7 +50,7 @@ def crawl_article_content(url):
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36")
 
-    service = Service(executable_path=os.path.join(os.path.dirname(__file__), "chromedriver.exe"))
+    service = Service(ChromeDriverManager().install())
     driver = None
     try:
         driver = webdriver.Chrome(service=service, options=chrome_options)
