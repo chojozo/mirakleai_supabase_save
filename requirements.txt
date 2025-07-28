@@ -4,3 +4,4 @@ pytz
 python-dotenv
 selenium
 supabase
+webdriver-manager
