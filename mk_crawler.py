@@ -125,7 +125,6 @@ def crawl_mirakleai():
     driver = webdriver.Chrome(service=service, options=chrome_options)
     
     try:
-        driver = webdriver.Chrome(service=service, options=chrome_options)
         driver.get(URL)
         
         # 뉴스 목록 컨테이너가 로드될 때까지 최대 10초 대기
