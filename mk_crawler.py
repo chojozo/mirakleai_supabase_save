@@ -13,13 +13,14 @@ import re
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import WebDriverException, TimeoutException
 import time
-from webdriver_manager.chrome import ChromeDriverManager
+
 
 load_dotenv()
 
@@ -51,7 +52,8 @@ def crawl_article_content(url):
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36")
 
     service = Service(ChromeDriverManager().install())
-    driver = None
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+
     try:
         driver = webdriver.Chrome(service=service, options=chrome_options)
         driver.get(url)
