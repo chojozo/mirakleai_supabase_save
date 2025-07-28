@@ -121,8 +121,9 @@ def crawl_mirakleai():
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36")
 
-    service = Service(executable_path=os.path.join(os.path.dirname(__file__), "chromedriver.exe"))
-    driver = None
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    
     try:
         driver = webdriver.Chrome(service=service, options=chrome_options)
         driver.get(URL)
