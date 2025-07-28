@@ -1,9 +1,9 @@
 name: Daily Crawler
 
 on:
-  schedule:
+  workflow_dispatch:       # 수동 실행 활성화
+  schedule:                # 매일 UTC 23시 = 한국 시간 오전 8시
     - cron: '0 23 * * *'
-  workflow_dispatch:
 
 jobs:
   crawl:
@@ -16,35 +16,45 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11'
+        python-version: '3.x'
 
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install supabase
+      run: pip install -r requirements.txt
 
-    - name: Install Chrome and ChromeDriver (ver 114)
+    - name: Set up environment variables
+      run: |
+        echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> $GITHUB_ENV
+        echo "SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}" >> $GITHUB_ENV
+        echo "SMTP_USER=${{ secrets.SMTP_USER }}" >> $GITHUB_ENV
+        echo "SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}" >> $GITHUB_ENV
+        echo "RECIPIENT_EMAIL=${{ secrets.RECIPIENT_EMAIL }}" >> $GITHUB_ENV
+
+    - name: Install Chrome and matching ChromeDriver
       run: |
         sudo apt-get update
-        sudo apt-get install -y unzip wget curl gnupg libnss3 libxss1 libappindicator3-1 fonts-liberation libu2f-udev
-        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-        sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get -f install -y
+        sudo apt-get install -y wget unzip curl gnupg2 jq
 
-        # 명확한 버전의 ChromeDriver 설치 (v114)
-        wget https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_linux64.zip
-        unzip chromedriver_linux64.zip
-        sudo mv chromedriver /usr/local/bin/
-        chmod +x /usr/local/bin/chromedriver
-        chromedriver --version
+        # 최신 Chrome 설치
+        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
 
+        # Chrome 버전에 맞는 ChromeDriver 자동 다운로드
+        CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+' | head -n1)
+        echo "Detected Chrome version: $CHROME_VERSION"
+
+        CHROMEDRIVER_URL=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" | jq -r ".channels.Stable.downloads.chromedriver[] | select(.platform == \"linux64\") | select(.url | test(\"$CHROME_VERSION\")) | .url")
+
+        echo "Downloading matching ChromeDriver from: $CHROMEDRIVER_URL"
+        curl -o chromedriver.zip "$CHROMEDRIVER_URL"
+        unzip chromedriver.zip
+        sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
+        sudo chmod +x /usr/local/bin/chromedriver
+
+        # 확인
+        google-chrome --version || true
+        chromedriver --version || true
 
     - name: Run crawler
-      run: python aitimes_crawler.py
-
-    env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-      SMTP_USER: ${{ secrets.SMTP_USER }}
-      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-      RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
+      run: python mk_crawler.py
