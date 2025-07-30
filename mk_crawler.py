@@ -227,6 +227,7 @@ def save_to_supabase(articles):
     # 디버그 출력: 저장될 기사들의 링크 확인
     print("DEBUG: Links of articles to save to Supabase:")
     for article in articles_to_save:
+        article['source'] = 'Mirakle AI News' # Add source field
         print(f"  - {article['link']}")
 
     try:
