@@ -3,7 +3,7 @@ name: Daily Crawler
 on:
   workflow_dispatch:
   schedule:
-    - cron: '10 2 * * *'  # 매일 KST 오전 8시 20분에 실행
+    - cron: '50 22 * * *'  # 매일 KST 오전 7시 50분에 실행
 
 jobs:
   crawl:
