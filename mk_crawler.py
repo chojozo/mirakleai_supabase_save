@@ -316,9 +316,9 @@ if __name__ == "__main__":
         save_to_supabase(crawled_articles)
         print("DEBUG: Supabase 저장 함수 호출 후")
         
-        print("DEBUG: 이메일 발송 함수 호출 전")
-        send_email(crawled_articles)
-        print("DEBUG: 이메일 발송 함수 호출 후")
+        # print("DEBUG: 이메일 발송 함수 호출 전")
+        # send_email(crawled_articles)
+        # print("DEBUG: 이메일 발송 함수 호출 후")
     else:
         print("DEBUG: 크롤링된 기사가 없어 Supabase 저장 및 이메일 발송을 건너뜁니다.")
     print("DEBUG: 메인 스크립트 종료")
