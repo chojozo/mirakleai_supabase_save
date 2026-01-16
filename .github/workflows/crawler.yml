@@ -31,32 +31,14 @@ jobs:
         echo "SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}" >> $GITHUB_ENV
         echo "RECIPIENT_EMAIL=${{ secrets.RECIPIENT_EMAIL }}" >> $GITHUB_ENV
 
-    - name: Install Chrome and matching ChromeDriver
+    - name: Install Chrome
+      uses: browser-actions/setup-chrome@latest
+      with:
+        chrome-version: stable
+
+    - name: Verify Chrome installation
       run: |
-        sudo apt-get update
-        sudo apt-get install -y wget unzip curl gnupg2 jq
-
-        # 최신 Chrome 설치
-        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-        sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
-
-        # Chrome 버전에 맞는 ChromeDriver 자동 다운로드
-        CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+' | head -n1)
-        echo "Detected Chrome version: $CHROME_VERSION"
-
-        CHROMEDRIVER_URL=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" | jq -r ".channels.Stable.downloads.chromedriver[] | select(.platform == \"linux64\") | select(.url | test(\"$CHROME_VERSION\")) | .url")
-
-        echo "Downloading matching ChromeDriver from: $CHROMEDRIVER_URL"
-        curl -o chromedriver.zip "$CHROMEDRIVER_URL"
-        unzip chromedriver.zip
-        sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
-        sudo chmod +x /usr/local/bin/chromedriver
-
-        # 확인
-        google-chrome --version || true
-        chromedriver --version || true
+        google-chrome --version || chrome --version || true
 
     - name: Run crawler
       run: python mk_crawler.py
