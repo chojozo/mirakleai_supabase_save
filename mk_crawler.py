@@ -155,18 +155,19 @@ def crawl_mirakleai():
             print(f"DEBUG: 페이지 소스 앞부분:\n{driver.page_source[:2000]}")
             return None
 
-        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        # driver.page_source 대신 Selenium 요소에서 직접 HTML 추출 (리렌더 경쟁 조건 방지)
+        list_element = driver.find_element(By.ID, 'list_area')
+        list_html = list_element.get_attribute('outerHTML')
+        soup = BeautifulSoup(list_html, 'html.parser')
 
         articles = []
         kst = pytz.timezone('Asia/Seoul')
         now = datetime.now(kst)
         one_day_ago = now - timedelta(days=1)
 
-        # Find the main news list container
         news_list_container = soup.find('ul', id='list_area')
         if not news_list_container:
-            print("DEBUG: 뉴스 목록 컨테이너를 찾을 수 없습니다. (WebDriverWait 이후)")
-            print(f"DEBUG: 페이지 소스 앞부분:\n{driver.page_source[:3000]}")
+            print("DEBUG: 뉴스 목록 컨테이너를 찾을 수 없습니다.")
             return None
 
         li_elements = news_list_container.find_all('li')
