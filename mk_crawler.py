@@ -27,10 +27,12 @@ load_dotenv()
 def get_chrome_service_and_options():
     """GitHub Actions와 로컬 환경 모두에서 동작하는 Chrome 설정을 반환합니다."""
     chrome_options = Options()
-    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36")
+    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+    chrome_options.add_argument("--window-size=1920,1080")
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36")
 
     chrome_bin = os.environ.get('CHROME_BIN')
     chromedriver_path = os.environ.get('CHROMEDRIVER_PATH')
@@ -132,17 +134,25 @@ def crawl_mirakleai():
 
     service, chrome_options = get_chrome_service_and_options()
     driver = webdriver.Chrome(service=service, options=chrome_options)
-    
+    # 봇 탐지 우회: navigator.webdriver 속성 제거
+    driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+        "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+    })
+
     try:
         driver.get(URL)
-        
-        # 뉴스 목록 컨테이너가 로드될 때까지 최대 10초 대기
+        print(f"DEBUG: 페이지 제목: {driver.title}")
+        print(f"DEBUG: 현재 URL: {driver.current_url}")
+
+        # 뉴스 목록 컨테이너가 로드될 때까지 최대 20초 대기
         try:
             WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "ul#list_area li.news_node"))
             )
         except TimeoutException:
             print("DEBUG: 뉴스 목록 컨테이너 로드 시간 초과.")
+            print(f"DEBUG: 타임아웃 시 페이지 제목: {driver.title}")
+            print(f"DEBUG: 페이지 소스 앞부분:\n{driver.page_source[:2000]}")
             return None
 
         soup = BeautifulSoup(driver.page_source, 'html.parser')
@@ -156,6 +166,7 @@ def crawl_mirakleai():
         news_list_container = soup.find('ul', id='list_area')
         if not news_list_container:
             print("DEBUG: 뉴스 목록 컨테이너를 찾을 수 없습니다. (WebDriverWait 이후)")
+            print(f"DEBUG: 페이지 소스 앞부분:\n{driver.page_source[:3000]}")
             return None
 
         li_elements = news_list_container.find_all('li')
