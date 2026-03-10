@@ -32,14 +32,13 @@ jobs:
         echo "RECIPIENT_EMAIL=${{ secrets.RECIPIENT_EMAIL }}" >> $GITHUB_ENV
 
     - name: Install Chrome
+      id: setup-chrome
       uses: browser-actions/setup-chrome@latest
       with:
         chrome-version: stable
 
-    - name: Verify Chrome installation
-      run: |
-        google-chrome --version || chrome --version || true
-
     - name: Run crawler
       run: python mk_crawler.py
- 
+      env:
+        CHROME_BIN: ${{ steps.setup-chrome.outputs.chrome-path }}
+        CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}

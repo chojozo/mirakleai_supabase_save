@@ -24,6 +24,27 @@ import time
 
 load_dotenv()
 
+def get_chrome_service_and_options():
+    """GitHub Actions와 로컬 환경 모두에서 동작하는 Chrome 설정을 반환합니다."""
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36")
+
+    chrome_bin = os.environ.get('CHROME_BIN')
+    chromedriver_path = os.environ.get('CHROMEDRIVER_PATH')
+
+    if chrome_bin:
+        chrome_options.binary_location = chrome_bin
+
+    if chromedriver_path:
+        service = Service(chromedriver_path)
+    else:
+        service = Service(ChromeDriverManager().install())
+
+    return service, chrome_options
+
 # --- 환경 변수 및 Supabase 설정 ---
 SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 465
@@ -45,13 +66,7 @@ except Exception as e:
 
 def crawl_article_content(url):
     """주어진 URL에서 기사 본문 내용을 Selenium을 사용하여 크롤링합니다."""
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36")
-
-    service = Service(ChromeDriverManager().install())
+    service, chrome_options = get_chrome_service_and_options()
     driver = None
 
     try:
@@ -115,13 +130,7 @@ def crawl_mirakleai():
         print("DEBUG: Supabase 클라이언트가 유효하지 않아 크롤링을 중단합니다.")
         return None
 
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36")
-
-    service = Service(ChromeDriverManager().install())
+    service, chrome_options = get_chrome_service_and_options()
     driver = webdriver.Chrome(service=service, options=chrome_options)
     
     try:
@@ -137,7 +146,7 @@ def crawl_mirakleai():
             return None
 
         soup = BeautifulSoup(driver.page_source, 'html.parser')
-        
+
         articles = []
         kst = pytz.timezone('Asia/Seoul')
         now = datetime.now(kst)
